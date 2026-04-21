@@ -1,0 +1,12 @@
+anthropic>=0.25.0
+PyGithub>=2.3.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+pydantic>=2.6.0
+Jinja2>=3.1.4
+bandit>=1.7.8
+safety>=3.2.0
+gitpython>=3.1.43
+rich>=13.7.0
+click>=8.1.7
+packaging>=24.0
