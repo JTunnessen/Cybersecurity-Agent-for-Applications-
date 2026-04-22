@@ -7,6 +7,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from agent.models import Finding, ReportMetadata, ScanResult, Severity, SEVERITY_WEIGHTS
+from analyzers.attack_mapper import ATTACKMapper
 
 _NIST_FAMILY_NAMES: dict[str, str] = {
     "AC": "Access Control",
@@ -78,10 +79,11 @@ class ReportGenerator:
         )
         self._env.filters["truncate"] = self._truncate
 
-        # Load OWASP category descriptions
         data_dir = Path(__file__).parent.parent / "data"
         with open(data_dir / "owasp_categories.json", encoding="utf-8") as f:
             self._owasp_data: dict = json.load(f)
+
+        self._attack_mapper = ATTACKMapper()
 
     def generate(
         self,
@@ -116,6 +118,7 @@ class ReportGenerator:
             "cve_findings": [f for f in findings if f.cve_ids],
             "owasp_summary": self._build_owasp_summary(findings),
             "nist_mapping": self._build_nist_mapping(findings),
+            "attack_summary": self._attack_mapper.build_summary(findings),
             "scanner_counts": self._build_scanner_counts(findings),
             "scanner_errors": scan_result.scanner_errors,
         }

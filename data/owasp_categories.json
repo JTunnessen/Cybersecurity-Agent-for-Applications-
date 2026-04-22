@@ -1,62 +1,62 @@
 {
-  "A01:2021-Broken_Access_Control": {
-    "id": "A01:2021",
+  "A01:2025-Broken_Access_Control": {
+    "id": "A01:2025",
     "name": "Broken Access Control",
-    "description": "Access control enforces policy such that users cannot act outside of their intended permissions. Failures typically lead to unauthorized information disclosure, modification, or destruction of all data or performing a business function outside the user's limits.",
+    "description": "Access control enforces policy such that users cannot act outside their intended permissions. Failures lead to unauthorized information disclosure, modification, or destruction of data. In 2025 this category expands to absorb Server-Side Request Forgery (SSRF), which was a standalone entry in 2021.",
     "risk": "Critical"
   },
-  "A02:2021-Cryptographic_Failures": {
-    "id": "A02:2021",
-    "name": "Cryptographic Failures",
-    "description": "Failures related to cryptography (or lack thereof) which often lead to exposure of sensitive data. Common issues include weak algorithms, improper key management, and transmitting data in cleartext.",
-    "risk": "High"
-  },
-  "A03:2021-Injection": {
-    "id": "A03:2021",
-    "name": "Injection",
-    "description": "Injection flaws occur when untrusted data is sent to an interpreter as part of a command or query. SQL, NoSQL, OS, and LDAP injection, cross-site scripting (XSS), and template injection are all injection variants.",
-    "risk": "Critical"
-  },
-  "A04:2021-Insecure_Design": {
-    "id": "A04:2021",
-    "name": "Insecure Design",
-    "description": "Insecure design represents different weaknesses expressed as missing or ineffective control design. Secure design patterns and threat modeling are required to address this category.",
-    "risk": "High"
-  },
-  "A05:2021-Security_Misconfiguration": {
-    "id": "A05:2021",
+  "A02:2025-Security_Misconfiguration": {
+    "id": "A02:2025",
     "name": "Security Misconfiguration",
-    "description": "The application might be vulnerable if it lacks appropriate security hardening, uses default credentials, exposes unnecessary features, or reveals error information to users.",
+    "description": "Security misconfiguration is the most commonly seen issue. This is commonly a result of insecure default configurations, incomplete or ad hoc configurations, open cloud storage, misconfigured HTTP headers, or verbose error messages containing sensitive information. Rises from #5 in 2021 to #2 in 2025, reflecting increased attack surface from IaC, pipelines, and cloud misconfigurations.",
     "risk": "High"
   },
-  "A06:2021-Vulnerable_and_Outdated_Components": {
-    "id": "A06:2021",
-    "name": "Vulnerable and Outdated Components",
-    "description": "Components such as libraries, frameworks, and other software modules run with the same privileges as the application. Using components with known vulnerabilities may undermine application defenses.",
+  "A03:2025-Software_Supply_Chain_Failures": {
+    "id": "A03:2025",
+    "name": "Software Supply Chain Failures",
+    "description": "New in 2025. Expands beyond 'Vulnerable and Outdated Components' (2021 A06) to cover the entire software supply chain: third-party libraries, build tools, CI/CD pipelines, artifact integrity, and deployment automation. Includes risks from compromised upstream sources and software bill of materials (SBOM) gaps.",
     "risk": "High"
   },
-  "A07:2021-Identification_and_Authentication_Failures": {
-    "id": "A07:2021",
+  "A04:2025-Cryptographic_Failures": {
+    "id": "A04:2025",
+    "name": "Cryptographic Failures",
+    "description": "Previously known as Sensitive Data Exposure (2021 A02), this category focuses on failures related to cryptography (or lack thereof) which often lead to exposure of sensitive data. Common issues include use of weak or deprecated algorithms, improper key management, insufficient entropy, and transmission of sensitive data in cleartext.",
+    "risk": "High"
+  },
+  "A05:2025-Injection": {
+    "id": "A05:2025",
+    "name": "Injection",
+    "description": "Injection flaws occur when untrusted data is sent to an interpreter as part of a command or query. SQL, NoSQL, OS command, LDAP injection, XSS (cross-site scripting), and template injection are all injection variants. Moves from #3 in 2021 to #5 in 2025 as other categories have grown in prevalence.",
+    "risk": "Critical"
+  },
+  "A06:2025-Identification_and_Authentication_Failures": {
+    "id": "A06:2025",
     "name": "Identification and Authentication Failures",
-    "description": "Confirmation of the user's identity, authentication, and session management is critical to protect against authentication-related attacks such as credential stuffing and brute force.",
+    "description": "Confirmation of the user's identity, authentication, and session management is critical to protect against authentication-related attacks including credential stuffing, brute force, weak passwords, missing MFA, and session fixation. Moves from #7 in 2021 to #6 in 2025.",
     "risk": "High"
   },
-  "A08:2021-Software_and_Data_Integrity_Failures": {
-    "id": "A08:2021",
+  "A07:2025-Software_and_Data_Integrity_Failures": {
+    "id": "A07:2025",
     "name": "Software and Data Integrity Failures",
-    "description": "Code and infrastructure that does not protect against integrity violations, including insecure deserialization, use of unsigned or unverified updates, CI/CD pipeline insecurity.",
+    "description": "Code and infrastructure that does not protect against integrity violations, including insecure deserialization, use of unsigned or unverified updates, CI/CD pipeline insecurity, and auto-update functionality without integrity verification. In 2025 this expands to include AI model pipeline security.",
     "risk": "High"
   },
-  "A09:2021-Security_Logging_and_Monitoring_Failures": {
-    "id": "A09:2021",
-    "name": "Security Logging and Monitoring Failures",
-    "description": "Without logging and monitoring, breaches cannot be detected. Insufficient logging, detection, monitoring, and active response occurs when auditable events are not logged correctly.",
+  "A08:2025-Security_Logging_and_Alerting_Failures": {
+    "id": "A08:2025",
+    "name": "Security Logging and Alerting Failures",
+    "description": "Renamed from 'Security Logging and Monitoring Failures' (2021 A09) to emphasize the importance of active alerting, not just logging. Without sufficient logging and real-time alerting, breaches cannot be detected and responded to. Includes insufficient audit trails, missing event logging, and failure to notify on suspicious activity.",
     "risk": "Medium"
   },
-  "A10:2021-Server_Side_Request_Forgery": {
-    "id": "A10:2021",
-    "name": "Server-Side Request Forgery (SSRF)",
-    "description": "SSRF flaws occur whenever a web application fetches a remote resource without validating the user-supplied URL. It allows attackers to coerce the application to send crafted requests to unexpected destinations.",
+  "A09:2025-Insecure_Design": {
+    "id": "A09:2025",
+    "name": "Insecure Design",
+    "description": "Insecure design represents different weaknesses expressed as missing or ineffective control design. Moved from #4 in 2021 to #9 in 2025. Secure design patterns, threat modeling during architecture, and reference architectures are required to address this category. Covers missing business logic controls, insecure direct object references, and design-level security oversights.",
     "risk": "High"
+  },
+  "A10:2025-Mishandling_of_Exceptional_Conditions": {
+    "id": "A10:2025",
+    "name": "Mishandling of Exceptional Conditions",
+    "description": "New in 2025. Covers failures to safely handle exceptional conditions, unusual inputs, and edge cases. Includes uncontrolled resource consumption (DoS), fail-open logic, improper error handling that exposes sensitive state, infinite loops, and deeply nested structure bombs. Attackers can exploit these conditions to crash systems, bypass controls, or cause denial of service.",
+    "risk": "Medium"
   }
 }

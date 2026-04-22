@@ -39,6 +39,7 @@ class Finding(BaseModel):
     package_version: Optional[str] = None
     owasp_categories: list[str] = Field(default_factory=list)
     nist_controls: list[str] = Field(default_factory=list)
+    attack_techniques: list[str] = Field(default_factory=list)
     remediation: Optional[str] = None
     references: list[str] = Field(default_factory=list)
 

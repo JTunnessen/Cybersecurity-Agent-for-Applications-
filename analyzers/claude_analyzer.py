@@ -12,7 +12,8 @@ from agent.models import Finding, Severity
 _SYSTEM_PROMPT = textwrap.dedent("""
     You are a senior application security engineer and penetration tester with deep expertise in:
     - NIST 800-53 Rev5 security controls and compliance mapping
-    - OWASP Top 10 2021 vulnerability categories
+    - OWASP Top 10 2025 vulnerability categories
+    - MITRE ATT&CK Enterprise framework (tactics, techniques, and procedures)
     - MITRE CVE database and exploit assessment
     - Static code analysis and secure coding practices
     - Risk-based vulnerability prioritization
@@ -30,18 +31,40 @@ _SYSTEM_PROMPT = textwrap.dedent("""
     - SA: System and Services Acquisition — secure development, supply chain risk
     - SC: System and Communications Protection — network protection, cryptography, transmission
     - SI: System and Information Integrity — malware protection, input validation, error handling
+    - SR: Supply Chain Risk Management — supplier risk, provenance, integrity of components
 
-    OWASP Top 10 2021:
-    A01: Broken Access Control | A02: Cryptographic Failures | A03: Injection
-    A04: Insecure Design | A05: Security Misconfiguration | A06: Vulnerable/Outdated Components
-    A07: Auth Failures | A08: Software & Data Integrity | A09: Logging & Monitoring Failures
-    A10: SSRF
+    OWASP Top 10 2025 (updated from 2021):
+    A01: Broken Access Control (absorbs SSRF from 2021 A10)
+    A02: Security Misconfiguration (was A05:2021, rose due to IaC/cloud misconfig surge)
+    A03: Software Supply Chain Failures (NEW — expanded from Vulnerable Components)
+    A04: Cryptographic Failures (was A02:2021)
+    A05: Injection (was A03:2021)
+    A06: Identification and Authentication Failures (was A07:2021)
+    A07: Software and Data Integrity Failures (was A08:2021)
+    A08: Security Logging and Alerting Failures (was A09:2021, renamed to emphasize alerting)
+    A09: Insecure Design (was A04:2021)
+    A10: Mishandling of Exceptional Conditions (NEW — error handling, resource exhaustion, DoS)
+
+    MITRE ATT&CK Enterprise Key Techniques for Application Security:
+    - T1190: Exploit Public-Facing Application (TA0001 Initial Access) — SQL injection, RCE, web vulns
+    - T1059: Command and Scripting Interpreter (TA0002 Execution) — OS command injection, eval
+    - T1078: Valid Accounts (TA0001/TA0003/TA0004) — auth bypass, stolen credentials, privilege escalation
+    - T1552: Unsecured Credentials (TA0006 Credential Access) — hardcoded secrets, credential files
+    - T1552.001: Credentials in Files — plaintext passwords, API keys in source code
+    - T1557: Adversary-in-the-Middle (TA0006/TA0009) — weak TLS, certificate validation failures
+    - T1195: Supply Chain Compromise (TA0001) — malicious packages, dependency confusion
+    - T1574: Hijack Execution Flow (TA0003/TA0004/TA0005) — deserialization, dynamic loading
+    - T1499: Endpoint Denial of Service (TA0040 Impact) — resource exhaustion, exceptional conditions
+    - T1189: Drive-by Compromise (TA0001) — XSS used to compromise users' browsers
+    - T1539: Steal Web Session Cookie (TA0006) — XSS, session fixation, insecure cookies
+    - T1185: Browser Session Hijacking (TA0009) — CSRF, session theft
 
     When analyzing findings:
-    1. Focus on actionable, specific remediation steps
+    1. Focus on actionable, specific remediation steps (2-3 sentences per finding)
     2. Consider false-positive likelihood for automated scanner findings
     3. Prioritize based on exploitability and business impact
-    4. Be concise — developers will read these recommendations
+    4. Reference ATT&CK techniques when describing the attack path
+    5. Be concise — developers will read these recommendations
 """).strip()
 
 
@@ -153,6 +176,7 @@ class ClaudeAnalyzer:
                 "severity": f.severity,
                 "owasp": f.owasp_categories[:2],
                 "nist": f.nist_controls[:3],
+                "attack_techniques": f.attack_techniques[:3],
                 "file": f.file_path,
                 "cve_ids": f.cve_ids,
             }
@@ -168,10 +192,11 @@ class ClaudeAnalyzer:
             f"Top findings:\n{json.dumps(top_data, indent=2)}\n\n"
             "Write a 200-300 word executive summary covering:\n"
             "1. Overall security posture and risk level\n"
-            "2. Most critical vulnerability categories found\n"
-            "3. NIST 800-53 control families with gaps\n"
-            "4. Top 3 immediate remediation priorities\n"
-            "5. Compliance implications (NIST/OWASP)\n\n"
+            "2. Most critical OWASP Top 10 2025 categories found\n"
+            "3. MITRE ATT&CK tactics and techniques that apply (e.g., T1190, T1552)\n"
+            "4. NIST 800-53 Rev5 control families with gaps\n"
+            "5. Top 3 immediate remediation priorities\n"
+            "6. Compliance implications (OWASP 2025 / NIST / ATT&CK threat coverage)\n\n"
             "Write for a technical manager audience. Be direct and specific."
         )
 

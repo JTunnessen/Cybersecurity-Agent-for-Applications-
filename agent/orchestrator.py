@@ -11,6 +11,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from agent.config import Config
 from agent.models import Finding, ReportMetadata, ScanResult, Severity, SEVERITY_WEIGHTS
+from analyzers.attack_mapper import ATTACKMapper
 from analyzers.claude_analyzer import ClaudeAnalyzer
 from analyzers.nist_mapper import NISTMapper
 from analyzers.owasp_mapper import OWASPMapper
@@ -31,6 +32,7 @@ class Orchestrator:
         self._report_injector = ReportInjector()
         self._owasp_mapper = OWASPMapper()
         self._nist_mapper = NISTMapper()
+        self._attack_mapper = ATTACKMapper()
         self._claude_analyzer = ClaudeAnalyzer()
         self._report_generator = ReportGenerator()
 
@@ -73,10 +75,11 @@ class Orchestrator:
             console.print(f"  [green]✓[/green] {len(findings)} unique findings after deduplication")
             scan_result.findings = findings
 
-            # ── Step 5: Map OWASP and NIST ────────────────────────────────────
-            console.print("\n[bold blue]▶ Mapping to OWASP Top 10 and NIST 800-53 Rev5...[/bold blue]")
+            # ── Step 5: Map OWASP, NIST, and ATT&CK ──────────────────────────
+            console.print("\n[bold blue]▶ Mapping to OWASP 2025, NIST 800-53 Rev5, and MITRE ATT&CK...[/bold blue]")
             self._owasp_mapper.map_all(findings)
             self._nist_mapper.map_all(findings)
+            self._attack_mapper.map_all(findings)
             console.print("  [green]✓[/green] Framework mappings complete")
 
             # ── Step 6: Claude analysis ───────────────────────────────────────

@@ -1,0 +1,193 @@
+{
+  "_comment": "CWE and OWASP 2025 category to MITRE ATT&CK Enterprise technique mappings",
+
+  "_techniques": {
+    "T1059": {
+      "name": "Command and Scripting Interpreter",
+      "tactic": "Execution",
+      "tactic_id": "TA0002",
+      "url": "https://attack.mitre.org/techniques/T1059/"
+    },
+    "T1078": {
+      "name": "Valid Accounts",
+      "tactic": "Initial Access / Persistence / Privilege Escalation / Defense Evasion",
+      "tactic_id": "TA0001",
+      "url": "https://attack.mitre.org/techniques/T1078/"
+    },
+    "T1083": {
+      "name": "File and Directory Discovery",
+      "tactic": "Discovery",
+      "tactic_id": "TA0007",
+      "url": "https://attack.mitre.org/techniques/T1083/"
+    },
+    "T1185": {
+      "name": "Browser Session Hijacking",
+      "tactic": "Collection",
+      "tactic_id": "TA0009",
+      "url": "https://attack.mitre.org/techniques/T1185/"
+    },
+    "T1189": {
+      "name": "Drive-by Compromise",
+      "tactic": "Initial Access",
+      "tactic_id": "TA0001",
+      "url": "https://attack.mitre.org/techniques/T1189/"
+    },
+    "T1190": {
+      "name": "Exploit Public-Facing Application",
+      "tactic": "Initial Access",
+      "tactic_id": "TA0001",
+      "url": "https://attack.mitre.org/techniques/T1190/"
+    },
+    "T1195": {
+      "name": "Supply Chain Compromise",
+      "tactic": "Initial Access",
+      "tactic_id": "TA0001",
+      "url": "https://attack.mitre.org/techniques/T1195/"
+    },
+    "T1499": {
+      "name": "Endpoint Denial of Service",
+      "tactic": "Impact",
+      "tactic_id": "TA0040",
+      "url": "https://attack.mitre.org/techniques/T1499/"
+    },
+    "T1528": {
+      "name": "Steal Application Access Token",
+      "tactic": "Credential Access",
+      "tactic_id": "TA0006",
+      "url": "https://attack.mitre.org/techniques/T1528/"
+    },
+    "T1539": {
+      "name": "Steal Web Session Cookie",
+      "tactic": "Credential Access",
+      "tactic_id": "TA0006",
+      "url": "https://attack.mitre.org/techniques/T1539/"
+    },
+    "T1548": {
+      "name": "Abuse Elevation Control Mechanism",
+      "tactic": "Privilege Escalation / Defense Evasion",
+      "tactic_id": "TA0004",
+      "url": "https://attack.mitre.org/techniques/T1548/"
+    },
+    "T1552": {
+      "name": "Unsecured Credentials",
+      "tactic": "Credential Access",
+      "tactic_id": "TA0006",
+      "url": "https://attack.mitre.org/techniques/T1552/"
+    },
+    "T1552.001": {
+      "name": "Unsecured Credentials: Credentials In Files",
+      "tactic": "Credential Access",
+      "tactic_id": "TA0006",
+      "url": "https://attack.mitre.org/techniques/T1552/001/"
+    },
+    "T1552.004": {
+      "name": "Unsecured Credentials: Private Keys",
+      "tactic": "Credential Access",
+      "tactic_id": "TA0006",
+      "url": "https://attack.mitre.org/techniques/T1552/004/"
+    },
+    "T1557": {
+      "name": "Adversary-in-the-Middle",
+      "tactic": "Credential Access / Collection",
+      "tactic_id": "TA0006",
+      "url": "https://attack.mitre.org/techniques/T1557/"
+    },
+    "T1565": {
+      "name": "Data Manipulation",
+      "tactic": "Impact",
+      "tactic_id": "TA0040",
+      "url": "https://attack.mitre.org/techniques/T1565/"
+    },
+    "T1574": {
+      "name": "Hijack Execution Flow",
+      "tactic": "Persistence / Privilege Escalation / Defense Evasion",
+      "tactic_id": "TA0003",
+      "url": "https://attack.mitre.org/techniques/T1574/"
+    },
+    "T1599": {
+      "name": "Network Boundary Bridging",
+      "tactic": "Defense Evasion",
+      "tactic_id": "TA0005",
+      "url": "https://attack.mitre.org/techniques/T1599/"
+    }
+  },
+
+  "CWE-20":  ["T1190"],
+  "CWE-22":  ["T1083", "T1190"],
+  "CWE-23":  ["T1083", "T1190"],
+  "CWE-59":  ["T1083"],
+  "CWE-74":  ["T1190"],
+  "CWE-77":  ["T1059", "T1190"],
+  "CWE-78":  ["T1059", "T1190"],
+  "CWE-79":  ["T1189", "T1185", "T1539"],
+  "CWE-80":  ["T1189"],
+  "CWE-89":  ["T1190"],
+  "CWE-90":  ["T1190"],
+  "CWE-94":  ["T1059", "T1190"],
+  "CWE-95":  ["T1059", "T1190"],
+  "CWE-98":  ["T1190"],
+  "CWE-113": ["T1565"],
+  "CWE-200": ["T1083", "T1190"],
+  "CWE-201": ["T1083"],
+  "CWE-259": ["T1552", "T1552.001"],
+  "CWE-261": ["T1557"],
+  "CWE-284": ["T1078", "T1548"],
+  "CWE-285": ["T1078", "T1548"],
+  "CWE-287": ["T1078", "T1548"],
+  "CWE-295": ["T1557"],
+  "CWE-296": ["T1557"],
+  "CWE-302": ["T1078"],
+  "CWE-306": ["T1078", "T1548"],
+  "CWE-307": ["T1078"],
+  "CWE-310": ["T1557"],
+  "CWE-319": ["T1557"],
+  "CWE-321": ["T1552", "T1552.004"],
+  "CWE-326": ["T1557"],
+  "CWE-327": ["T1557"],
+  "CWE-330": ["T1552"],
+  "CWE-338": ["T1552"],
+  "CWE-345": ["T1574", "T1195"],
+  "CWE-346": ["T1557"],
+  "CWE-347": ["T1574", "T1195"],
+  "CWE-352": ["T1185"],
+  "CWE-400": ["T1499"],
+  "CWE-409": ["T1499"],
+  "CWE-470": ["T1059"],
+  "CWE-494": ["T1195"],
+  "CWE-502": ["T1059", "T1190"],
+  "CWE-522": ["T1552"],
+  "CWE-532": ["T1552"],
+  "CWE-538": ["T1552.001"],
+  "CWE-540": ["T1552.001"],
+  "CWE-541": ["T1552.001"],
+  "CWE-601": ["T1189"],
+  "CWE-611": ["T1190"],
+  "CWE-613": ["T1539", "T1528"],
+  "CWE-614": ["T1539"],
+  "CWE-640": ["T1078"],
+  "CWE-643": ["T1190"],
+  "CWE-674": ["T1499"],
+  "CWE-776": ["T1499"],
+  "CWE-798": ["T1552", "T1552.001"],
+  "CWE-829": ["T1195"],
+  "CWE-835": ["T1499"],
+  "CWE-862": ["T1078", "T1548"],
+  "CWE-863": ["T1078", "T1548"],
+  "CWE-916": ["T1552"],
+  "CWE-917": ["T1190"],
+  "CWE-918": ["T1190", "T1599"],
+  "CWE-1035": ["T1190", "T1195"],
+  "CWE-1104": ["T1195"],
+  "CWE-1236": ["T1059"],
+
+  "A01:2025-Broken_Access_Control":                    ["T1190", "T1078", "T1548", "T1599"],
+  "A02:2025-Security_Misconfiguration":                ["T1190", "T1078"],
+  "A03:2025-Software_Supply_Chain_Failures":           ["T1195"],
+  "A04:2025-Cryptographic_Failures":                   ["T1557", "T1552"],
+  "A05:2025-Injection":                                ["T1190", "T1059"],
+  "A06:2025-Identification_and_Authentication_Failures": ["T1078", "T1548", "T1539"],
+  "A07:2025-Software_and_Data_Integrity_Failures":     ["T1574", "T1195"],
+  "A08:2025-Security_Logging_and_Alerting_Failures":   ["T1562"],
+  "A09:2025-Insecure_Design":                          ["T1190", "T1078"],
+  "A10:2025-Mishandling_of_Exceptional_Conditions":    ["T1499"]
+}
