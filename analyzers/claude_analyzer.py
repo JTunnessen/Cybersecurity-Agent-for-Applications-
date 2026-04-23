@@ -60,10 +60,16 @@ _SYSTEM_PROMPT = textwrap.dedent("""
     - T1539: Steal Web Session Cookie (TA0006) — XSS, session fixation, insecure cookies
     - T1185: Browser Session Hijacking (TA0009) — CSRF, session theft
 
+    CISA Known Exploited Vulnerabilities (KEV):
+    - KEV findings have confirmed active exploitation — treat as HIGHEST priority regardless of CVSS score
+    - CISA Binding Operational Directive 22-01 mandates federal agencies remediate KEV findings by the published due date
+    - When a finding is marked KEV, explicitly reference the CISA mandate and urgency in remediation advice
+    - Recommend immediate patching, virtual patching, or compensating controls when the due date is near or overdue
+
     When analyzing findings:
     1. Focus on actionable, specific remediation steps (2-3 sentences per finding)
     2. Consider false-positive likelihood for automated scanner findings
-    3. Prioritize based on exploitability and business impact
+    3. Prioritize based on exploitability and business impact — KEV findings always first
     4. Reference ATT&CK techniques when describing the attack path
     5. Be concise — developers will read these recommendations
 """).strip()

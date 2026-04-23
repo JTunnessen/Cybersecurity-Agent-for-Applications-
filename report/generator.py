@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -119,6 +120,7 @@ class ReportGenerator:
             "owasp_summary": self._build_owasp_summary(findings),
             "nist_mapping": self._build_nist_mapping(findings),
             "attack_summary": self._attack_mapper.build_summary(findings),
+            "kev_findings": self._build_kev_summary(findings),
             "scanner_counts": self._build_scanner_counts(findings),
             "scanner_errors": scan_result.scanner_errors,
         }
@@ -167,6 +169,42 @@ class ReportGenerator:
                 "description": _NIST_CONTROL_DESCRIPTIONS.get(ctrl, ""),
                 "count": count,
             }
+        return result
+
+    def _build_kev_summary(self, findings: list[Finding]) -> list[dict]:
+        today = datetime.now(tz=timezone.utc).date()
+        result = []
+        for f in findings:
+            if not f.is_kev:
+                continue
+            if f.kev_due_date:
+                try:
+                    due = datetime.strptime(f.kev_due_date, "%Y-%m-%d").date()
+                    days_remaining = (due - today).days
+                    overdue = days_remaining < 0
+                except ValueError:
+                    days_remaining = None
+                    overdue = False
+            else:
+                days_remaining = None
+                overdue = False
+
+            for cve_id in (f.cve_ids or [f.kev_vendor_project or "N/A"]):
+                result.append({
+                    "cve_id": cve_id,
+                    "package_name": f.package_name or "N/A",
+                    "package_version": f.package_version or "N/A",
+                    "severity": f.severity,
+                    "kev_vendor_project": f.kev_vendor_project or "N/A",
+                    "kev_product": f.kev_product or "N/A",
+                    "kev_date_added": f.kev_date_added or "N/A",
+                    "kev_due_date": f.kev_due_date or "N/A",
+                    "days_remaining": days_remaining,
+                    "overdue": overdue,
+                    "kev_required_action": f.kev_required_action or "See CISA advisory",
+                    "kev_short_description": f.kev_short_description or f.description,
+                })
+                break  # one row per finding, using first CVE ID
         return result
 
     def _build_scanner_counts(self, findings: list[Finding]) -> dict[str, int]:

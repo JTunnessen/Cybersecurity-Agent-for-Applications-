@@ -40,6 +40,13 @@ class Finding(BaseModel):
     owasp_categories: list[str] = Field(default_factory=list)
     nist_controls: list[str] = Field(default_factory=list)
     attack_techniques: list[str] = Field(default_factory=list)
+    is_kev: bool = False
+    kev_date_added: Optional[str] = None
+    kev_due_date: Optional[str] = None
+    kev_required_action: Optional[str] = None
+    kev_vendor_project: Optional[str] = None
+    kev_product: Optional[str] = None
+    kev_short_description: Optional[str] = None
     remediation: Optional[str] = None
     references: list[str] = Field(default_factory=list)
 

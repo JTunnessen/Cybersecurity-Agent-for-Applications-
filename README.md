@@ -1,6 +1,6 @@
 # Cybersecurity Agent for Applications
 
-A CLI-driven security scanning agent that analyzes GitHub repositories for vulnerabilities across five security frameworks and commits a comprehensive report directly back to the repository.
+A CLI-driven security scanning agent that analyzes GitHub repositories for vulnerabilities across six security frameworks and commits a comprehensive report directly back to the repository.
 
 ## What It Does
 
@@ -9,12 +9,14 @@ A CLI-driven security scanning agent that analyzes GitHub repositories for vulne
    - **Static Analysis** — Semgrep (multi-language) and Bandit (Python-specific)
    - **Dependency Audit** — Safety for Python packages
    - **CVE Scanning** — OSV.dev batch API for all ecosystem dependency manifests
-3. **Maps** every finding to five security frameworks:
+   - **CISA KEV Check** — Cross-references all CVEs against the CISA Known Exploited Vulnerabilities catalog
+3. **Maps** every finding to six security frameworks:
    - **NIST 800-53 Rev5** control families (AC, AU, CM, IA, SC, SI, SR, ...)
    - **OWASP Top 10 2025** categories (A01–A10)
    - **MITRE CVE IDs** from the NVD / OSV.dev database
    - **MITRE ATT&CK Enterprise** tactics and techniques (T1190, T1552, T1195, ...)
-4. **Analyzes** findings with your choice of AI — Claude (Anthropic) or GPT-4o (OpenAI) — to generate per-finding remediation advice and an executive summary that covers OWASP 2025, NIST gaps, and ATT&CK threat context
+   - **CISA KEV Catalog** — flags actively exploited CVEs with CISA-mandated remediation deadlines and days remaining
+4. **Analyzes** findings with your choice of AI — Claude (Anthropic) or GPT-4o (OpenAI) — to generate per-finding remediation advice and an executive summary that covers OWASP 2025, NIST gaps, ATT&CK threat context, and KEV urgency
 5. **Commits** a `SECURITY_REPORT.md` file to the repository with a prioritized TODO checklist
 
 ## Supported Languages
@@ -120,7 +122,8 @@ The generated `SECURITY_REPORT.md` contains:
 | MITRE ATT&CK Coverage | Technique table linked to attack.mitre.org; per-technique finding breakdown |
 | NIST 800-53 Control Gap Analysis | Controls failing and the findings that triggered them |
 | CVE / Dependency References | Table of known CVEs in dependencies |
-| Remediation Checklist | Prioritized `- [ ]` tasks with ATT&CK technique IDs, CVEs, and NIST controls |
+| CISA KEV Analysis | Actively exploited CVEs with due dates, days remaining, and required actions (BOD 22-01) |
+| Remediation Checklist | KEV items listed first with deadlines, then prioritized `- [ ]` tasks with ATT&CK IDs, CVEs, and NIST controls |
 | Appendix | Scanner runtime details and warnings |
 
 ## Using as a CI/CD Gate
@@ -207,6 +210,24 @@ Maps findings to adversary techniques across Initial Access, Execution, Credenti
 
 ### MITRE CVE
 Queries the [OSV.dev](https://osv.dev) batch API to match dependency versions against known CVEs across PyPI, npm, Packagist, RubyGems, Go, Cargo, and Maven ecosystems.
+
+### CISA Known Exploited Vulnerabilities (KEV)
+
+Cross-references all detected CVEs against the [CISA KEV catalog](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) — a curated list of vulnerabilities with confirmed active exploitation in the wild.
+
+**KEV findings receive special treatment:**
+- Automatically elevated to at least **HIGH** severity (active exploitation trumps CVSS score)
+- Dedicated report section showing CISA-mandated remediation timeline
+- Remediation checklist flags KEV items first with due date and days remaining
+- AI analysis explicitly calls out CISA BOD 22-01 mandate urgency
+
+| KEV Field | Description |
+|-----------|-------------|
+| Date Added | When CISA added this CVE to the catalog |
+| **Due Date** | CISA-mandated remediation deadline (BOD 22-01) |
+| Days Remaining | Countdown to deadline (negative = overdue) |
+| Required Action | CISA-prescribed remediation action |
+| Vendor / Product | Affected product from the advisory |
 
 ### Static Code Analysis
 - **Bandit**: Python-specific security linting — SQL injection, shell injection, hardcoded credentials, insecure crypto, pickle deserialization, and 60+ additional checks with CWE mappings

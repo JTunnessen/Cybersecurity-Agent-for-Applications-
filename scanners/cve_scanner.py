@@ -33,8 +33,8 @@ _CVSS_TO_SEVERITY: list[tuple[float, Severity]] = [
     (0.1, Severity.LOW),
 ]
 
-# Cached KEV set (CVE IDs actively exploited in the wild)
-_kev_cache: set[str] | None = None
+# Cached KEV catalog: cveID → full KEV entry dict
+_kev_cache: dict[str, dict] | None = None
 
 
 def _cvss_to_severity(score: float) -> Severity:
@@ -44,7 +44,8 @@ def _cvss_to_severity(score: float) -> Severity:
     return Severity.INFO
 
 
-def _fetch_kev_set() -> set[str]:
+def _fetch_kev_catalog() -> dict[str, dict]:
+    """Return {cveID: full_kev_entry} from the CISA Known Exploited Vulnerabilities catalog."""
     global _kev_cache
     if _kev_cache is not None:
         return _kev_cache
@@ -52,9 +53,9 @@ def _fetch_kev_set() -> set[str]:
         resp = requests.get(Config.CISA_KEV_URL, timeout=15)
         resp.raise_for_status()
         data = resp.json()
-        _kev_cache = {v["cveID"] for v in data.get("vulnerabilities", [])}
+        _kev_cache = {v["cveID"]: v for v in data.get("vulnerabilities", [])}
     except Exception:
-        _kev_cache = set()
+        _kev_cache = {}
     return _kev_cache
 
 
@@ -65,8 +66,8 @@ class CVEScanner(BaseScanner):
             return []
 
         osv_vulns = self._query_osv_batch(packages)
-        kev_set = _fetch_kev_set()
-        return self._build_findings(osv_vulns, kev_set)
+        kev_catalog = _fetch_kev_catalog()
+        return self._build_findings(osv_vulns, kev_catalog)
 
     # ── Package extraction ────────────────────────────────────────────────────
 
@@ -236,7 +237,7 @@ class CVEScanner(BaseScanner):
 
     # ── Finding construction ────────────────────────────────────────────────────
 
-    def _build_findings(self, osv_vulns: list[dict], kev_set: set[str]) -> list[Finding]:
+    def _build_findings(self, osv_vulns: list[dict], kev_catalog: dict[str, dict]) -> list[Finding]:
         findings = []
         for vuln in osv_vulns:
             pkg = vuln.get("_pkg", {})
@@ -247,12 +248,14 @@ class CVEScanner(BaseScanner):
             cvss_score = self._extract_cvss(vuln)
             severity = _cvss_to_severity(cvss_score) if cvss_score else Severity.MEDIUM
 
-            # Bump severity if in KEV catalog
-            if any(cve in kev_set for cve in cve_ids):
+            # Check KEV catalog for any matching CVE
+            kev_entry = next((kev_catalog[cve] for cve in cve_ids if cve in kev_catalog), None)
+
+            # KEV findings are always at least HIGH — actively exploited in the wild
+            if kev_entry:
                 severity_order = [Severity.INFO, Severity.LOW, Severity.MEDIUM, Severity.HIGH, Severity.CRITICAL]
-                idx = severity_order.index(severity)
-                if idx < len(severity_order) - 1:
-                    severity = severity_order[idx + 1]
+                if severity_order.index(severity) < severity_order.index(Severity.HIGH):
+                    severity = Severity.HIGH
 
             summary = vuln.get("summary", "Known vulnerability in dependency")
             details = vuln.get("details", "")
@@ -271,6 +274,17 @@ class CVEScanner(BaseScanner):
                 cwe_ids=["CWE-1035"],  # Using Component with Known Vulnerabilities
                 references=references[:5],
             )
+
+            # Populate full KEV metadata if this CVE is in the catalog
+            if kev_entry:
+                finding.is_kev = True
+                finding.kev_date_added = kev_entry.get("dateAdded")
+                finding.kev_due_date = kev_entry.get("dueDate")
+                finding.kev_required_action = kev_entry.get("requiredAction")
+                finding.kev_vendor_project = kev_entry.get("vendorProject")
+                finding.kev_product = kev_entry.get("product")
+                finding.kev_short_description = kev_entry.get("shortDescription")
+
             findings.append(finding)
 
         return findings
