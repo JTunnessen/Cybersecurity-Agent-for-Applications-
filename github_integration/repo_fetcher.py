@@ -48,20 +48,38 @@ class RepoFetcher:
         else:
             auth_url = repo_url
 
+        # Resolve branch: confirm it exists, fall back to repo default if not
+        actual_branch = self._resolve_branch(repo_url, branch)
+
         try:
             git.Repo.clone_from(
                 auth_url,
                 local_path,
-                branch=branch,
+                branch=actual_branch,
                 depth=1,
                 multi_options=["--single-branch"],
             )
-        except git.GitCommandError as e:
-            # Try default branch if specified branch doesn't exist
-            if "not found" in str(e).lower() or "not found" in str(e):
-                git.Repo.clone_from(auth_url, local_path, depth=1)
+        except git.GitCommandError:
+            # Clean up any partial clone directory before retrying
+            shutil.rmtree(local_path, ignore_errors=True)
+            git.Repo.clone_from(auth_url, local_path, depth=1)
 
         return local_path
+
+    def _resolve_branch(self, repo_url: str, requested: str) -> str:
+        """Return requested branch if it exists on the remote, else the repo default."""
+        try:
+            owner, repo_name = _parse_owner_repo(repo_url)
+            g = Github(self._token)
+            repo = g.get_repo(f"{owner}/{repo_name}")
+            default = repo.default_branch
+            try:
+                repo.get_branch(requested)
+                return requested          # branch exists, use it
+            except GithubException:
+                return default            # fall back to master/main/whatever
+        except Exception:
+            return requested              # can't reach API, try as-is
 
     def get_repo_metadata(self, repo_url: str) -> dict[str, Any]:
         try:
