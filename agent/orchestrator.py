@@ -59,9 +59,9 @@ class Orchestrator:
         try:
             # ── Step 1: Clone repository ──────────────────────────────────────
             console.print(f"\n[bold blue]▶ Cloning repository:[/bold blue] {repo_url} (branch: {branch})")
-            local_path = self._repo_fetcher.clone_repo(repo_url, branch)
+            local_path, branch = self._repo_fetcher.clone_repo(repo_url, branch)
             repo_metadata = self._repo_fetcher.get_repo_metadata(repo_url)
-            console.print(f"  [green]✓[/green] Cloned to {local_path}")
+            console.print(f"  [green]✓[/green] Cloned to {local_path} (branch: {branch})")
 
             # ── Step 2: Detect languages ──────────────────────────────────────
             languages = detect_languages(local_path)

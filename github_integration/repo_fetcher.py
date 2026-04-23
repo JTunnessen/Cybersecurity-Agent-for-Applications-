@@ -29,7 +29,8 @@ class RepoFetcher:
     def __init__(self, github_token: str | None = None) -> None:
         self._token = github_token or Config.GITHUB_TOKEN
 
-    def clone_repo(self, repo_url: str, branch: str = "main") -> str:
+    def clone_repo(self, repo_url: str, branch: str = "main") -> tuple[str, str]:
+        """Return (local_path, actual_branch) — actual_branch may differ from requested."""
         owner, repo_name = _parse_owner_repo(repo_url)
         work_dir = Path(Config.WORK_DIR)
         work_dir.mkdir(parents=True, exist_ok=True)
@@ -64,7 +65,7 @@ class RepoFetcher:
             shutil.rmtree(local_path, ignore_errors=True)
             git.Repo.clone_from(auth_url, local_path, depth=1)
 
-        return local_path
+        return local_path, actual_branch
 
     def _resolve_branch(self, repo_url: str, requested: str) -> str:
         """Return requested branch if it exists on the remote, else the repo default."""
