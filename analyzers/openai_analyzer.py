@@ -4,7 +4,7 @@ import json
 import textwrap
 from typing import Any
 
-import anthropic
+from openai import OpenAI
 
 from agent.config import Config
 from agent.models import Finding, Severity
@@ -69,10 +69,10 @@ _SYSTEM_PROMPT = textwrap.dedent("""
 """).strip()
 
 
-class ClaudeAnalyzer(BaseAnalyzer):
-    def __init__(self, api_key: str | None = None) -> None:
-        self._client = anthropic.Anthropic(api_key=api_key or Config.ANTHROPIC_API_KEY)
-        self._model = Config.CLAUDE_MODEL
+class OpenAIAnalyzer(BaseAnalyzer):
+    def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
+        self._client = OpenAI(api_key=api_key or Config.OPENAI_API_KEY)
+        self._model = model or Config.OPENAI_MODEL
 
     def analyze(
         self,
@@ -93,8 +93,7 @@ class ClaudeAnalyzer(BaseAnalyzer):
     ) -> list[Finding]:
         chunk_size = Config.MAX_FINDINGS_PER_BATCH
         for i in range(0, len(findings), chunk_size):
-            chunk = findings[i : i + chunk_size]
-            self._enrich_chunk(chunk, repo_metadata)
+            self._enrich_chunk(findings[i : i + chunk_size], repo_metadata)
         return findings
 
     def _enrich_chunk(
@@ -129,20 +128,16 @@ class ClaudeAnalyzer(BaseAnalyzer):
         )
 
         try:
-            response = self._client.messages.create(
+            response = self._client.chat.completions.create(
                 model=self._model,
-                max_tokens=2048,
-                system=[
-                    {
-                        "type": "text",
-                        "text": _SYSTEM_PROMPT,
-                        "cache_control": {"type": "ephemeral"},
-                    }
+                messages=[
+                    {"role": "system", "content": _SYSTEM_PROMPT},
+                    {"role": "user", "content": user_content},
                 ],
-                messages=[{"role": "user", "content": user_content}],
+                max_tokens=2048,
+                response_format={"type": "text"},
             )
-            raw = response.content[0].text
-            # Extract JSON array from response
+            raw = response.choices[0].message.content or ""
             start = raw.find("[")
             end = raw.rfind("]") + 1
             if start >= 0 and end > start:
@@ -150,10 +145,8 @@ class ClaudeAnalyzer(BaseAnalyzer):
                 id_map = {e["id"]: e for e in enrichments if "id" in e}
                 for finding in chunk:
                     if finding.id in id_map:
-                        enrich = id_map[finding.id]
-                        finding.remediation = enrich.get("remediation", "")
+                        finding.remediation = id_map[finding.id].get("remediation", "")
         except Exception:
-            # Non-fatal — leave remediation as None if Claude call fails
             pass
 
     # ── Executive summary ─────────────────────────────────────────────────────
@@ -161,7 +154,7 @@ class ClaudeAnalyzer(BaseAnalyzer):
     def _generate_executive_summary(
         self, findings: list[Finding], repo_metadata: dict[str, Any]
     ) -> str:
-        severity_counts = {}
+        severity_counts: dict = {}
         for f in findings:
             severity_counts[f.severity] = severity_counts.get(f.severity, 0) + 1
 
@@ -202,19 +195,15 @@ class ClaudeAnalyzer(BaseAnalyzer):
         )
 
         try:
-            response = self._client.messages.create(
+            response = self._client.chat.completions.create(
                 model=self._model,
-                max_tokens=1024,
-                system=[
-                    {
-                        "type": "text",
-                        "text": _SYSTEM_PROMPT,
-                        "cache_control": {"type": "ephemeral"},
-                    }
+                messages=[
+                    {"role": "system", "content": _SYSTEM_PROMPT},
+                    {"role": "user", "content": user_content},
                 ],
-                messages=[{"role": "user", "content": user_content}],
+                max_tokens=1024,
             )
-            return response.content[0].text
+            return response.choices[0].message.content or ""
         except Exception as e:
             total = len(findings)
             critical = severity_counts.get(Severity.CRITICAL, 0)

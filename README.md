@@ -14,7 +14,7 @@ A CLI-driven security scanning agent that analyzes GitHub repositories for vulne
    - **OWASP Top 10 2025** categories (A01–A10)
    - **MITRE CVE IDs** from the NVD / OSV.dev database
    - **MITRE ATT&CK Enterprise** tactics and techniques (T1190, T1552, T1195, ...)
-4. **Analyzes** findings with Claude AI to generate per-finding remediation advice and an executive summary that covers OWASP 2025, NIST gaps, and ATT&CK threat context
+4. **Analyzes** findings with your choice of AI — Claude (Anthropic) or GPT-4o (OpenAI) — to generate per-finding remediation advice and an executive summary that covers OWASP 2025, NIST gaps, and ATT&CK threat context
 5. **Commits** a `SECURITY_REPORT.md` file to the repository with a prioritized TODO checklist
 
 ## Supported Languages
@@ -49,7 +49,9 @@ cp .env.example .env
 ```
 
 ```env
-ANTHROPIC_API_KEY=sk-ant-...      # Required: get from console.anthropic.com
+AI_PROVIDER=anthropic             # "anthropic" or "openai" (default: anthropic)
+ANTHROPIC_API_KEY=sk-ant-...      # Required if AI_PROVIDER=anthropic
+OPENAI_API_KEY=sk-...             # Required if AI_PROVIDER=openai
 GITHUB_TOKEN=ghp_...              # Required: needs repo read + write access
 NVD_API_KEY=                      # Optional: increases NVD rate limit to 50 req/30s
 WORK_DIR=/tmp/cyb-agent-scans     # Optional: where repos are cloned
@@ -60,8 +62,14 @@ WORK_DIR=/tmp/cyb-agent-scans     # Optional: where repos are cloned
 ### 3. Run a scan
 
 ```bash
-# Scan and commit report to the repository
+# Scan and commit report (uses AI_PROVIDER from .env, defaults to anthropic)
 python main.py https://github.com/owner/repo
+
+# Explicitly use Claude (Anthropic)
+python main.py https://github.com/owner/repo --provider anthropic
+
+# Use GPT-4o (OpenAI) instead
+python main.py https://github.com/owner/repo --provider openai
 
 # Scan without committing (dry run)
 python main.py https://github.com/owner/repo --no-inject
@@ -84,13 +92,14 @@ Usage: python main.py [OPTIONS] REPO_URL
   Scan a GitHub repository for security vulnerabilities.
 
 Options:
-  --branch TEXT                   Branch to scan  [default: main]
-  --report-path TEXT              Path for report inside repository  [default: SECURITY_REPORT.md]
-  --output-dir TEXT               Local directory to save the report  [default: ./reports]
-  --inject / --no-inject          Commit the report to GitHub  [default: inject]
+  --branch TEXT                      Branch to scan  [default: main]
+  --provider [anthropic|openai]      AI provider for analysis (overrides AI_PROVIDER env var)
+  --report-path TEXT                 Path for report inside repository  [default: SECURITY_REPORT.md]
+  --output-dir TEXT                  Local directory to save the report  [default: ./reports]
+  --inject / --no-inject             Commit the report to GitHub  [default: inject]
   --severity-threshold [critical|high|medium|low|info]
-                                  Exit code 1 if findings at this level found  [default: high]
-  --help                          Show this message and exit.
+                                     Exit code 1 if findings at this level found  [default: high]
+  --help                             Show this message and exit.
 ```
 
 **Exit codes:**
@@ -148,7 +157,9 @@ main.py (CLI)
        │   ├─ owasp_mapper.py          ← CWE → OWASP Top 10 2025 category
        │   ├─ nist_mapper.py           ← CWE/OWASP → NIST 800-53 Rev5 controls
        │   ├─ attack_mapper.py         ← CWE/OWASP → MITRE ATT&CK techniques
-       │   └─ claude_analyzer.py       ← AI enrichment with prompt caching
+       │   ├─ base_analyzer.py         ← Abstract BaseAnalyzer interface
+       │   ├─ claude_analyzer.py       ← Anthropic Claude implementation (prompt caching)
+       │   └─ openai_analyzer.py       ← OpenAI GPT-4o implementation
        ├─ data/
        │   ├─ cwe_to_owasp.json        ← 100+ CWE → OWASP 2025 lookup table
        │   ├─ nist_controls.json       ← CWE/OWASP → NIST control IDs

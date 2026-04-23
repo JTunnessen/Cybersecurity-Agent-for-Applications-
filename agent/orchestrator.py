@@ -12,8 +12,10 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from agent.config import Config
 from agent.models import Finding, ReportMetadata, ScanResult, Severity, SEVERITY_WEIGHTS
 from analyzers.attack_mapper import ATTACKMapper
+from analyzers.base_analyzer import BaseAnalyzer
 from analyzers.claude_analyzer import ClaudeAnalyzer
 from analyzers.nist_mapper import NISTMapper
+from analyzers.openai_analyzer import OpenAIAnalyzer
 from analyzers.owasp_mapper import OWASPMapper
 from github_integration.repo_fetcher import RepoFetcher
 from github_integration.report_injector import ReportInjector
@@ -26,14 +28,21 @@ from scanners.semgrep_scanner import SemgrepScanner, detect_languages
 console = Console()
 
 
+def _make_analyzer(provider: str) -> BaseAnalyzer:
+    if provider == "openai":
+        return OpenAIAnalyzer()
+    return ClaudeAnalyzer()
+
+
 class Orchestrator:
-    def __init__(self) -> None:
+    def __init__(self, provider: str | None = None) -> None:
+        self._provider = (provider or Config.AI_PROVIDER).lower()
         self._repo_fetcher = RepoFetcher()
         self._report_injector = ReportInjector()
         self._owasp_mapper = OWASPMapper()
         self._nist_mapper = NISTMapper()
         self._attack_mapper = ATTACKMapper()
-        self._claude_analyzer = ClaudeAnalyzer()
+        self._analyzer = _make_analyzer(self._provider)
         self._report_generator = ReportGenerator()
 
     def run(
@@ -82,9 +91,10 @@ class Orchestrator:
             self._attack_mapper.map_all(findings)
             console.print("  [green]✓[/green] Framework mappings complete")
 
-            # ── Step 6: Claude analysis ───────────────────────────────────────
-            console.print("\n[bold blue]▶ Analyzing findings with Claude AI...[/bold blue]")
-            findings, executive_summary = self._claude_analyzer.analyze(findings, repo_metadata)
+            # ── Step 6: AI analysis ───────────────────────────────────────────
+            provider_label = "Claude (Anthropic)" if self._provider == "anthropic" else f"GPT-4o (OpenAI)"
+            console.print(f"\n[bold blue]▶ Analyzing findings with {provider_label}...[/bold blue]")
+            findings, executive_summary = self._analyzer.analyze(findings, repo_metadata)
             console.print("  [green]✓[/green] AI analysis complete")
 
             # ── Step 7: Generate report ───────────────────────────────────────

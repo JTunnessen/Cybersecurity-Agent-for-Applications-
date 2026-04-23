@@ -17,6 +17,12 @@ console = Console()
 @click.argument("repo_url")
 @click.option("--branch", default="main", show_default=True, help="Branch to scan")
 @click.option(
+    "--provider",
+    type=click.Choice(["anthropic", "openai"], case_sensitive=False),
+    default=None,
+    help="AI provider for analysis (overrides AI_PROVIDER env var)",
+)
+@click.option(
     "--report-path",
     default="SECURITY_REPORT.md",
     show_default=True,
@@ -43,6 +49,7 @@ console = Console()
 def scan(
     repo_url: str,
     branch: str,
+    provider: str | None,
     report_path: str,
     output_dir: str,
     inject: bool,
@@ -53,16 +60,27 @@ def scan(
     REPO_URL is the full URL of the GitHub repository to scan,
     e.g. https://github.com/owner/repo
     """
-    console.print("\n[bold]Cybersecurity Agent[/bold] — NIST 800-53 Rev5 · OWASP Top 10 · MITRE CVE\n")
+    console.print(
+        "\n[bold]Cybersecurity Agent[/bold] — "
+        "NIST 800-53 Rev5 · OWASP Top 10 2025 · MITRE CVE · MITRE ATT&CK\n"
+    )
+
+    active_provider = (provider or Config.AI_PROVIDER).lower()
 
     # Validate config
-    errors = Config.validate()
+    errors = Config.validate(provider=active_provider)
     if errors:
         for err in errors:
             console.print(f"[red]✗ Config error:[/red] {err}")
-        if not Config.ANTHROPIC_API_KEY:
+        if active_provider == "anthropic" and not Config.ANTHROPIC_API_KEY:
             console.print(
-                "[yellow]Hint:[/yellow] Set ANTHROPIC_API_KEY in your .env file or environment."
+                "[yellow]Hint:[/yellow] Set ANTHROPIC_API_KEY in your .env file, "
+                "or use --provider openai with OPENAI_API_KEY."
+            )
+        elif active_provider == "openai" and not Config.OPENAI_API_KEY:
+            console.print(
+                "[yellow]Hint:[/yellow] Set OPENAI_API_KEY in your .env file, "
+                "or use --provider anthropic with ANTHROPIC_API_KEY."
             )
         if not Config.GITHUB_TOKEN and inject:
             console.print(
@@ -71,8 +89,10 @@ def scan(
             )
         sys.exit(2)
 
+    console.print(f"  [dim]AI provider:[/dim] {active_provider}")
+
     try:
-        orchestrator = Orchestrator()
+        orchestrator = Orchestrator(provider=active_provider)
         result = orchestrator.run(
             repo_url=repo_url,
             branch=branch,
@@ -82,7 +102,6 @@ def scan(
             severity_threshold=severity_threshold,
         )
 
-        # Exit with code 1 if findings at or above threshold exist
         threshold_weight = {
             "critical": 4,
             "high": 3,
