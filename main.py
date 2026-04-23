@@ -13,6 +13,20 @@ from agent.orchestrator import Orchestrator
 console = Console()
 
 
+def _normalize_repo(repo: str) -> str:
+    """Accept owner/repo shorthand or a full GitHub URL."""
+    repo = repo.strip().rstrip("/")
+    if repo.startswith("http://") or repo.startswith("https://") or repo.startswith("git@"):
+        return repo
+    # Bare owner/repo — assume GitHub
+    if repo.count("/") == 1:
+        return f"https://github.com/{repo}"
+    raise click.BadParameter(
+        f"Cannot parse '{repo}'. Use 'owner/repo' or 'https://github.com/owner/repo'.",
+        param_hint="REPO_URL",
+    )
+
+
 @click.command()
 @click.argument("repo_url")
 @click.option("--branch", default="main", show_default=True, help="Branch to scan")
@@ -57,14 +71,18 @@ def scan(
 ) -> None:
     """Scan a GitHub repository for security vulnerabilities.
 
-    REPO_URL is the full URL of the GitHub repository to scan,
-    e.g. https://github.com/owner/repo
+    REPO_URL accepts either shorthand (owner/repo) or a full URL:
+
+    \b
+        python main.py JTunnessen/my-app
+        python main.py https://github.com/JTunnessen/my-app
     """
     console.print(
         "\n[bold]Cybersecurity Agent[/bold] — "
         "NIST 800-53 Rev5 · OWASP Top 10 2025 · MITRE CVE · MITRE ATT&CK\n"
     )
 
+    repo_url = _normalize_repo(repo_url)
     active_provider = (provider or Config.AI_PROVIDER).lower()
 
     # Validate config
