@@ -4,6 +4,7 @@ import json
 import os
 import re
 import time
+import xml.etree.ElementTree as ET
 from typing import Any
 
 import requests
@@ -24,7 +25,11 @@ _MANIFEST_PARSERS = {
     "go.sum": "go",
     "Cargo.lock": "crates.io",
     "pom.xml": "maven",
+    "packages.config": "nuget",
+    "packages.lock.json": "nuget",
 }
+
+_NUGET_PROJECT_EXTENSIONS = {".csproj", ".fsproj", ".vbproj"}
 
 _CVSS_TO_SEVERITY: list[tuple[float, Severity]] = [
     (9.0, Severity.CRITICAL),
@@ -78,6 +83,10 @@ class CVEScanner(BaseScanner):
             for fname in files:
                 ecosystem = _MANIFEST_PARSERS.get(fname)
                 if not ecosystem:
+                    ext = os.path.splitext(fname)[1].lower()
+                    if ext in _NUGET_PROJECT_EXTENSIONS:
+                        ecosystem = "nuget"
+                if not ecosystem:
                     continue
                 fpath = os.path.join(root, fname)
                 try:
@@ -103,6 +112,13 @@ class CVEScanner(BaseScanner):
             return self._parse_go_sum(content, ecosystem)
         if ecosystem == "crates.io":
             return self._parse_cargo_lock(content, ecosystem)
+        if ecosystem == "nuget":
+            fname_only = os.path.basename(fpath)
+            if fname_only == "packages.config":
+                return self._parse_packages_config(content, ecosystem)
+            if fname_only == "packages.lock.json":
+                return self._parse_packages_lock_json(content, ecosystem)
+            return self._parse_csproj(content, ecosystem)
         return []
 
     def _parse_requirements(self, content: str, ecosystem: str) -> list[dict]:
@@ -189,6 +205,55 @@ class CVEScanner(BaseScanner):
             pkgs.append({**current, "ecosystem": ecosystem})
         return pkgs
 
+    def _parse_packages_config(self, content: str, ecosystem: str) -> list[dict]:
+        """Parse legacy NuGet packages.config XML."""
+        pkgs = []
+        try:
+            root = ET.fromstring(content)
+            for pkg in root.findall(".//package"):
+                name = pkg.get("id", "")
+                version = pkg.get("version", "")
+                if name and version:
+                    pkgs.append({"name": name, "version": version, "ecosystem": ecosystem})
+        except ET.ParseError:
+            pass
+        return pkgs
+
+    def _parse_packages_lock_json(self, content: str, ecosystem: str) -> list[dict]:
+        """Parse NuGet packages.lock.json (SDK-style lock file)."""
+        pkgs = []
+        try:
+            data = json.loads(content)
+            for framework_deps in data.get("dependencies", {}).values():
+                for name, info in framework_deps.items():
+                    version = info.get("resolved", "")
+                    if version:
+                        pkgs.append({"name": name, "version": version, "ecosystem": ecosystem})
+        except json.JSONDecodeError:
+            pass
+        return pkgs
+
+    def _parse_csproj(self, content: str, ecosystem: str) -> list[dict]:
+        """Parse PackageReference elements from .csproj/.fsproj/.vbproj files."""
+        pkgs = []
+        try:
+            root = ET.fromstring(content)
+            ns_prefix = ""
+            if root.tag.startswith("{"):
+                ns_prefix = root.tag.split("}")[0] + "}"
+            for ref in root.findall(f".//{ns_prefix}PackageReference"):
+                name = ref.get("Include", "") or ref.get("include", "")
+                version = ref.get("Version", "") or ref.get("version", "")
+                if not version:
+                    ver_elem = ref.find(f"{ns_prefix}Version")
+                    if ver_elem is not None and ver_elem.text:
+                        version = ver_elem.text.strip()
+                if name and version:
+                    pkgs.append({"name": name, "version": version, "ecosystem": ecosystem})
+        except ET.ParseError:
+            pass
+        return pkgs
+
     # ── OSV.dev API ────────────────────────────────────────────────────────────
 
     def _query_osv_batch(self, packages: list[dict]) -> list[dict]:
@@ -232,6 +297,7 @@ class CVEScanner(BaseScanner):
             "go": "Go",
             "crates.io": "crates.io",
             "maven": "Maven",
+            "nuget": "NuGet",
         }
         return mapping.get(ecosystem, ecosystem)
 

@@ -23,6 +23,11 @@ _EXT_TO_LANGUAGE: dict[str, str] = {
     ".rb": "Ruby",
     ".rake": "Ruby",
     ".gemspec": "Ruby",
+    ".cs": "C#",
+    ".fs": "F#",
+    ".fsx": "F#",
+    ".fsi": "F#",
+    ".vb": "VB.NET",
 }
 
 _LANGUAGE_RULESETS: dict[str, list[str]] = {
@@ -31,6 +36,7 @@ _LANGUAGE_RULESETS: dict[str, list[str]] = {
     "TypeScript": ["p/typescript"],
     "PHP": ["p/php"],
     "Ruby": ["p/ruby"],
+    "C#": ["p/csharp"],
 }
 
 _ALWAYS_RULESETS = ["p/owasp-top-ten", "p/secrets"]

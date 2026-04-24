@@ -23,6 +23,7 @@ from report.generator import ReportGenerator
 from scanners.bandit_scanner import BanditScanner
 from scanners.brakeman_scanner import BrakemanScanner
 from scanners.cve_scanner import CVEScanner
+from scanners.devskim_scanner import DevSkimScanner
 from scanners.safety_scanner import SafetyScanner
 from scanners.semgrep_scanner import SemgrepScanner, detect_languages
 
@@ -156,6 +157,9 @@ class Orchestrator:
 
         if "Ruby" in languages:
             add_task("brakeman", lambda: BrakemanScanner().scan(repo_path))
+
+        if any(lang in languages for lang in ("C#", "F#", "VB.NET")):
+            add_task("devskim", lambda: DevSkimScanner().scan(repo_path))
 
         add_task("cve", lambda: CVEScanner().scan(repo_path))
 
