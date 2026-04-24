@@ -26,10 +26,13 @@ A CLI-driven security scanning agent that analyzes GitHub repositories for vulne
 | Python | Bandit + Semgrep | Safety + OSV.dev |
 | JavaScript | Semgrep | OSV.dev (npm) |
 | TypeScript | Semgrep | OSV.dev (npm) |
+| React (.jsx/.tsx) | Semgrep (p/react + p/javascript) | OSV.dev (npm) |
 | PHP | Semgrep | OSV.dev (Packagist) |
 | Ruby | Brakeman + Semgrep | OSV.dev (RubyGems) |
 | C# / .NET | DevSkim + Semgrep | OSV.dev (NuGet) |
 | F# / VB.NET | DevSkim | OSV.dev (NuGet) |
+| HTML | Semgrep | — |
+| CSS / SCSS / Sass / Less | Semgrep | — |
 
 ## Setup
 
@@ -238,7 +241,7 @@ Cross-references all detected CVEs against the [CISA KEV catalog](https://www.ci
 - **Bandit**: Python-specific security linting — SQL injection, shell injection, hardcoded credentials, insecure crypto, pickle deserialization, and 60+ additional checks with CWE mappings
 - **Brakeman**: Ruby/Rails-specific SAST — SQL injection, XSS, mass assignment, CSRF, unsafe redirects, command injection, deserialization, weak cryptography, and 30+ additional checks with CWE mappings
 - **DevSkim**: Microsoft's .NET/C# security linter — weak cryptography (MD5, SHA-1, DES, RC4), hardcoded secrets, SQL injection, XSS, command injection, path traversal, XXE, insecure deserialization, open redirect, CSRF, and 25+ additional checks with CWE mappings. Install via: `dotnet tool install -g Microsoft.CST.DevSkim.CLI`
-- **Semgrep**: Pattern-based analysis using `p/owasp-top-ten`, `p/secrets`, and language-specific security rulesets (`p/python`, `p/javascript`, `p/typescript`, `p/php`, `p/ruby`, `p/csharp`)
+- **Semgrep**: Pattern-based analysis using `p/owasp-top-ten`, `p/secrets`, and language-specific security rulesets (`p/python`, `p/javascript`, `p/typescript`, `p/react`, `p/php`, `p/ruby`, `p/csharp`). The `p/react` ruleset catches React-specific vulnerabilities including `dangerouslySetInnerHTML` misuse, unsafe `href`/`src` injection, unescaped user data in JSX, and insecure component patterns. HTML and CSS files are scanned by the always-on `p/owasp-top-ten` and `p/secrets` rulesets
 
 ## License
 

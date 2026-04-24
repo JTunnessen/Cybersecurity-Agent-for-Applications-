@@ -10,11 +10,11 @@ from scanners.base import BaseScanner
 _EXT_TO_LANGUAGE: dict[str, str] = {
     ".py": "Python",
     ".js": "JavaScript",
-    ".jsx": "JavaScript",
+    ".jsx": "React",
     ".mjs": "JavaScript",
     ".cjs": "JavaScript",
     ".ts": "TypeScript",
-    ".tsx": "TypeScript",
+    ".tsx": "React",
     ".php": "PHP",
     ".php3": "PHP",
     ".php4": "PHP",
@@ -28,12 +28,19 @@ _EXT_TO_LANGUAGE: dict[str, str] = {
     ".fsx": "F#",
     ".fsi": "F#",
     ".vb": "VB.NET",
+    ".html": "HTML",
+    ".htm": "HTML",
+    ".css": "CSS",
+    ".scss": "CSS",
+    ".sass": "CSS",
+    ".less": "CSS",
 }
 
 _LANGUAGE_RULESETS: dict[str, list[str]] = {
     "Python": ["p/python", "p/bandit"],
     "JavaScript": ["p/javascript"],
     "TypeScript": ["p/typescript"],
+    "React": ["p/javascript", "p/react"],
     "PHP": ["p/php"],
     "Ruby": ["p/ruby"],
     "C#": ["p/csharp"],
