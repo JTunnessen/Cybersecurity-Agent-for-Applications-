@@ -40,7 +40,7 @@ _LANGUAGE_RULESETS: dict[str, list[str]] = {
     "Python": ["p/python", "p/bandit"],
     "JavaScript": ["p/javascript"],
     "TypeScript": ["p/typescript"],
-    "React": ["p/javascript", "p/react"],
+    "React": ["p/javascript", "p/typescript", "p/react"],
     "PHP": ["p/php"],
     "Ruby": ["p/ruby"],
     "C#": ["p/csharp"],
