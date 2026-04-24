@@ -20,6 +20,9 @@ _EXT_TO_LANGUAGE: dict[str, str] = {
     ".php4": "PHP",
     ".php5": "PHP",
     ".phtml": "PHP",
+    ".rb": "Ruby",
+    ".rake": "Ruby",
+    ".gemspec": "Ruby",
 }
 
 _LANGUAGE_RULESETS: dict[str, list[str]] = {
@@ -27,6 +30,7 @@ _LANGUAGE_RULESETS: dict[str, list[str]] = {
     "JavaScript": ["p/javascript"],
     "TypeScript": ["p/typescript"],
     "PHP": ["p/php"],
+    "Ruby": ["p/ruby"],
 }
 
 _ALWAYS_RULESETS = ["p/owasp-top-ten", "p/secrets"]

@@ -21,6 +21,7 @@ from github_integration.repo_fetcher import RepoFetcher
 from github_integration.report_injector import ReportInjector
 from report.generator import ReportGenerator
 from scanners.bandit_scanner import BanditScanner
+from scanners.brakeman_scanner import BrakemanScanner
 from scanners.cve_scanner import CVEScanner
 from scanners.safety_scanner import SafetyScanner
 from scanners.semgrep_scanner import SemgrepScanner, detect_languages
@@ -152,6 +153,9 @@ class Orchestrator:
         if "Python" in languages:
             add_task("bandit", lambda: BanditScanner().scan(repo_path))
             add_task("safety", lambda: SafetyScanner().scan(repo_path))
+
+        if "Ruby" in languages:
+            add_task("brakeman", lambda: BrakemanScanner().scan(repo_path))
 
         add_task("cve", lambda: CVEScanner().scan(repo_path))
 

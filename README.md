@@ -6,7 +6,7 @@ A CLI-driven security scanning agent that analyzes GitHub repositories for vulne
 
 1. **Clones** the target GitHub repository (shallow clone for speed)
 2. **Scans** the code using four complementary methods:
-   - **Static Analysis** — Semgrep (multi-language) and Bandit (Python-specific)
+   - **Static Analysis** — Semgrep (multi-language), Bandit (Python-specific), and Brakeman (Ruby/Rails)
    - **Dependency Audit** — Safety for Python packages
    - **CVE Scanning** — OSV.dev batch API for all ecosystem dependency manifests
    - **CISA KEV Check** — Cross-references all CVEs against the CISA Known Exploited Vulnerabilities catalog
@@ -27,6 +27,7 @@ A CLI-driven security scanning agent that analyzes GitHub repositories for vulne
 | JavaScript | Semgrep | OSV.dev (npm) |
 | TypeScript | Semgrep | OSV.dev (npm) |
 | PHP | Semgrep | OSV.dev (Packagist) |
+| Ruby | Brakeman + Semgrep | OSV.dev (RubyGems) |
 
 ## Setup
 
@@ -153,6 +154,7 @@ main.py (CLI)
        │   └─ report_injector.py       ← GitHub API commit (create or update file)
        ├─ scanners/
        │   ├─ bandit_scanner.py        ← Python SAST (60+ CWE mappings)
+       │   ├─ brakeman_scanner.py      ← Ruby/Rails SAST (30+ CWE mappings)
        │   ├─ semgrep_scanner.py       ← Multi-language SAST (language-detected rulesets)
        │   ├─ safety_scanner.py        ← Python dependency audit
        │   └─ cve_scanner.py           ← OSV.dev batch CVE lookup
@@ -231,7 +233,8 @@ Cross-references all detected CVEs against the [CISA KEV catalog](https://www.ci
 
 ### Static Code Analysis
 - **Bandit**: Python-specific security linting — SQL injection, shell injection, hardcoded credentials, insecure crypto, pickle deserialization, and 60+ additional checks with CWE mappings
-- **Semgrep**: Pattern-based analysis using `p/owasp-top-ten`, `p/secrets`, and language-specific security rulesets (`p/python`, `p/javascript`, `p/typescript`, `p/php`)
+- **Brakeman**: Ruby/Rails-specific SAST — SQL injection, XSS, mass assignment, CSRF, unsafe redirects, command injection, deserializion, weak cryptography, and 30+ additional checks with CWE mappings
+- **Semgrep**: Pattern-based analysis using `p/owasp-top-ten`, `p/secrets`, and language-specific security rulesets (`p/python`, `p/javascript`, `p/typescript`, `p/php`, `p/ruby`)
 
 ## License
 
