@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import re
 import shutil
+import stat
 import uuid
 from pathlib import Path
 from typing import Any
@@ -23,6 +24,35 @@ def _parse_owner_repo(repo_url: str) -> tuple[str, str]:
         if m:
             return m.group(1), m.group(2)
     raise ValueError(f"Cannot parse GitHub owner/repo from URL: {repo_url}")
+
+
+def _is_checkout_error(err: str) -> bool:
+    """Return True when git transferred objects but couldn't write some files.
+
+    This happens on Windows when the repo contains filenames with characters
+    that are illegal on NTFS (colons, angle brackets, etc.).  The objects are
+    present in .git; the partial working tree is still scannable.
+    """
+    markers = ("unable to checkout", "invalid path", "checkout failed")
+    return any(m in err for m in markers)
+
+
+def _rmtree_robust(path: str) -> None:
+    """Remove a directory tree, retrying after clearing read-only bits.
+
+    Plain shutil.rmtree(ignore_errors=True) silently fails on Windows when
+    .git/objects files are marked read-only, leaving a stale directory that
+    blocks the next clone attempt.
+    """
+    def _on_error(func, fpath, _exc_info):
+        try:
+            os.chmod(fpath, stat.S_IWRITE)
+            func(fpath)
+        except Exception:
+            pass
+
+    if os.path.exists(path):
+        shutil.rmtree(path, onerror=_on_error)
 
 
 class RepoFetcher:
@@ -60,10 +90,21 @@ class RepoFetcher:
                 depth=1,
                 multi_options=["--single-branch"],
             )
-        except git.GitCommandError:
-            # Clean up any partial clone directory before retrying
-            shutil.rmtree(local_path, ignore_errors=True)
-            git.Repo.clone_from(auth_url, local_path, depth=1)
+        except git.GitCommandError as e:
+            err = str(e)
+            if _is_checkout_error(err) and os.path.exists(local_path):
+                # Objects transferred but some files have OS-incompatible names
+                # (e.g. colons on Windows).  Scan the partial working tree.
+                pass
+            else:
+                _rmtree_robust(local_path)
+                try:
+                    git.Repo.clone_from(auth_url, local_path, depth=1)
+                except git.GitCommandError as e2:
+                    if _is_checkout_error(str(e2)) and os.path.exists(local_path):
+                        pass
+                    else:
+                        raise
 
         return local_path, actual_branch
 
@@ -115,5 +156,5 @@ class RepoFetcher:
 
     @staticmethod
     def cleanup(local_path: str) -> None:
-        if local_path and os.path.exists(local_path):
-            shutil.rmtree(local_path, ignore_errors=True)
+        _rmtree_robust(local_path)
+
