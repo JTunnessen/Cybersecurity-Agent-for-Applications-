@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import stat
+import subprocess
 import uuid
 from pathlib import Path
 from typing import Any
@@ -35,6 +36,26 @@ def _is_checkout_error(err: str) -> bool:
     """
     markers = ("unable to checkout", "invalid path", "checkout failed")
     return any(m in err for m in markers)
+
+
+def _force_checkout(local_path: str) -> None:
+    """Retry working-tree checkout with core.protectNTFS=false.
+
+    When git encounters a filename containing Windows-reserved characters
+    (e.g. a colon) it aborts the entire checkout.  With protectNTFS disabled
+    git attempts each file individually; the OS silently rejects the invalid
+    ones while all other files land on disk normally.
+    """
+    try:
+        subprocess.run(
+            ["git", "-C", local_path, "-c", "core.protectNTFS=false",
+             "checkout", "HEAD", "--", "."],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+    except Exception:
+        pass
 
 
 def _rmtree_robust(path: str) -> None:
@@ -93,16 +114,18 @@ class RepoFetcher:
         except git.GitCommandError as e:
             err = str(e)
             if _is_checkout_error(err) and os.path.exists(local_path):
-                # Objects transferred but some files have OS-incompatible names
-                # (e.g. colons on Windows).  Scan the partial working tree.
-                pass
+                # Objects transferred but checkout aborted due to OS-incompatible
+                # filenames (e.g. colons on Windows).  Force a retry that lets
+                # the OS silently skip the invalid files while checking out all
+                # valid ones so the working tree is populated for scanning.
+                _force_checkout(local_path)
             else:
                 _rmtree_robust(local_path)
                 try:
                     git.Repo.clone_from(auth_url, local_path, depth=1)
                 except git.GitCommandError as e2:
                     if _is_checkout_error(str(e2)) and os.path.exists(local_path):
-                        pass
+                        _force_checkout(local_path)
                     else:
                         raise
 
