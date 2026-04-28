@@ -18,7 +18,7 @@ from agent.config import Config
 def _parse_owner_repo(repo_url: str) -> tuple[str, str]:
     """Extract owner and repo name from a GitHub URL."""
     patterns = [
-        r"github\.com[:/]([^/]+)/([^/\s.]+?)(?:\.git)?$",
+        r"github\.com[:/]([^/]+)/([^/\s]+?)(?:\.git)?$",
     ]
     for pattern in patterns:
         m = re.search(pattern, repo_url)
